@@ -1,109 +1,250 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "info": {
     "title": "GPT Crypto Intelligence API",
     "version": "1.0.0"
   },
+  "servers": [
+    {
+      "url": "https://meine-url.onrender.com"
+    }
+  ],
   "paths": {
     "/get_price": {
       "get": {
+        "operationId": "getPrice",
         "summary": "Get current price of a cryptocurrency",
         "parameters": [
-          { "name": "coin", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "currency", "in": "query", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "coin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Price data" } }
+        "responses": {
+          "200": {
+            "description": "Price data"
+          }
+        }
       }
     },
     "/get_news": {
       "get": {
+        "operationId": "getNews",
         "summary": "Get latest news for a cryptocurrency",
         "parameters": [
-          { "name": "coin", "in": "query", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "coin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
-        "responses": { "200": { "description": "News articles" } }
+        "responses": {
+          "200": {
+            "description": "News articles"
+          }
+        }
       }
     },
     "/wallet_info": {
       "get": {
+        "operationId": "getEthereumWalletInfo",
         "summary": "Get Ethereum wallet balance",
         "parameters": [
-          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
-        "responses": { "200": { "description": "ETH wallet data" } }
+        "responses": {
+          "200": {
+            "description": "ETH wallet data"
+          }
+        }
       }
     },
     "/wallet_info_base": {
       "get": {
+        "operationId": "getBaseWalletInfo",
         "summary": "Get Base wallet balance",
         "parameters": [
-          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Base wallet data" } }
+        "responses": {
+          "200": {
+            "description": "Base wallet data"
+          }
+        }
       }
     },
     "/wallet_info_bsc": {
       "get": {
+        "operationId": "getBscWalletInfo",
         "summary": "Get BSC wallet balance",
         "parameters": [
-          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
-        "responses": { "200": { "description": "BSC wallet data" } }
+        "responses": {
+          "200": {
+            "description": "BSC wallet data"
+          }
+        }
       }
     },
     "/wallet_info_solana": {
       "get": {
+        "operationId": "getSolanaWalletInfo",
         "summary": "Get Solana wallet balance",
         "parameters": [
-          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Solana wallet data" } }
+        "responses": {
+          "200": {
+            "description": "Solana wallet data"
+          }
+        }
       }
     },
     "/wallet_info_btc": {
       "get": {
+        "operationId": "getBitcoinWalletInfo",
         "summary": "Get Bitcoin wallet balance",
         "parameters": [
-          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Bitcoin wallet data" } }
+        "responses": {
+          "200": {
+            "description": "Bitcoin wallet data"
+          }
+        }
       }
     },
     "/wallet_info_xrp": {
       "get": {
+        "operationId": "getXrpWalletInfo",
         "summary": "Get XRP wallet balance",
-        "description": "Fetches the current XRP balance of a given Ripple address using public API.",
-        "tags": ["wallet", "xrp"],
         "parameters": [
-          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
-        "responses": { "200": { "description": "XRP wallet data" } }
+        "responses": {
+          "200": {
+            "description": "XRP wallet data"
+          }
+        }
       }
     },
     "/contract_info": {
       "get": {
+        "operationId": "getSmartContractInfo",
         "summary": "Get smart contract verification info",
         "parameters": [
-          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Smart contract metadata" } }
+        "responses": {
+          "200": {
+            "description": "Smart contract metadata"
+          }
+        }
       }
     },
     "/historical_price": {
       "get": {
+        "operationId": "getHistoricalPrice",
         "summary": "Get historical prices of a coin",
         "parameters": [
-          { "name": "coin", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "currency", "in": "query", "required": false, "schema": { "type": "string" }, "default": "eur" },
-          { "name": "days", "in": "query", "required": false, "schema": { "type": "integer" }, "default": 7 }
+          {
+            "name": "coin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "eur"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 7
+            }
+          }
         ],
-        "responses": { "200": { "description": "Historical chart data" } }
+        "responses": {
+          "200": {
+            "description": "Historical chart data"
+          }
+        }
       }
     }
-  },
-  "servers": [
-    {
-      "url": "https://your-render-url.onrender.com"
-    }
-  ]
+  }
 }
