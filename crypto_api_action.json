@@ -72,6 +72,8 @@
     "/wallet_info_xrp": {
       "get": {
         "summary": "Get XRP wallet balance",
+        "description": "Fetches the current XRP balance of a given Ripple address using public API.",
+        "tags": ["wallet", "xrp"],
         "parameters": [
           { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
         ],
