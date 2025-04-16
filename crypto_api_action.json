@@ -1,0 +1,107 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "GPT Crypto Intelligence API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/get_price": {
+      "get": {
+        "operationId": "getCryptoPrice",
+        "summary": "Get current price of a cryptocurrency",
+        "parameters": [
+          { "name": "coin", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "currency", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Price data" } }
+      }
+    },
+    "/get_news": {
+      "get": {
+        "operationId": "getCryptoNews",
+        "summary": "Get latest news for a cryptocurrency",
+        "parameters": [
+          { "name": "coin", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "News articles" } }
+      }
+    },
+    "/wallet_info": {
+      "get": {
+        "operationId": "getEthereumWallet",
+        "summary": "Get ETH wallet balance",
+        "parameters": [
+          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "ETH wallet data" } }
+      }
+    },
+    "/wallet_info_base": {
+      "get": {
+        "operationId": "getBaseWallet",
+        "summary": "Get Base wallet balance",
+        "parameters": [
+          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Base wallet data" } }
+      }
+    },
+    "/wallet_info_solana": {
+      "get": {
+        "operationId": "getSolanaWallet",
+        "summary": "Get Solana wallet balance",
+        "parameters": [
+          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Solana wallet data" } }
+      }
+    },
+    "/wallet_info_btc": {
+      "get": {
+        "operationId": "getBitcoinWallet",
+        "summary": "Get Bitcoin wallet balance",
+        "parameters": [
+          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Bitcoin wallet data" } }
+      }
+    },
+    "/wallet_info_xrp": {
+      "get": {
+        "operationId": "getXRPWallet",
+        "summary": "Get XRP wallet balance",
+        "parameters": [
+          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "XRP wallet data" } }
+      }
+    },
+    "/contract_info": {
+      "get": {
+        "operationId": "getContractInfo",
+        "summary": "Get smart contract verification info",
+        "parameters": [
+          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Smart contract metadata" } }
+      }
+    },
+    "/historical_price": {
+      "get": {
+        "operationId": "getHistoricalPrice",
+        "summary": "Get historical coin prices",
+        "parameters": [
+          { "name": "coin", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "currency", "in": "query", "required": false, "schema": { "type": "string" }, "default": "eur" },
+          { "name": "days", "in": "query", "required": false, "schema": { "type": "integer" }, "default": 7 }
+        ],
+        "responses": { "200": { "description": "Historical price chart" } }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://DEIN-SERVER.onrender.com"
+    }
+  ]
+}
