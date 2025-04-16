@@ -124,7 +124,9 @@ def wallet_info_bsc(address: str):
 def wallet_info_solana(address: str):
     try:
         url = f"https://public-api.solscan.io/account/{address}"
-        headers = {"accept": "application/json"}
+        # headers = {"accept": "application/json"}
+        headers = {"accept": "application/json", "User-Agent": "Mozilla/5.0"}
+
         res = requests.get(url, headers=headers, timeout=10)
         data = res.json()
         sol_balance = data.get("lamports", 0) / 1e9
@@ -151,7 +153,12 @@ def wallet_info_btc(address: str):
 def wallet_info_xrp(address: str):
     try:
         url = f"https://data.ripple.com/v2/accounts/{address}/balances"
-        res = requests.get(url, timeout=10)
+        headers = {
+            "accept": "application/json",
+            "User-Agent": "Mozilla/5.0"
+        }
+        res = requests.get(url, headers=headers, timeout=10)
+        res.raise_for_status()
         balances = res.json().get("balances", [])
         xrp_balance = next((b["value"] for b in balances if b["currency"] == "XRP"), "0")
         return {"address": address, "xrp_balance": float(xrp_balance)}
