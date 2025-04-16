@@ -6,17 +6,17 @@ import logging
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
-# Logger Setup
+# Logger setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# FastAPI App
+# Initialize FastAPI app
 app = FastAPI()
 
-# CORS Setup for GPT
+# CORS setup to allow calls from GPT
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://chat.openai.com"],
@@ -25,20 +25,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Environment Variables
+# Load API keys from environment
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 ETHERSCAN_API_KEY = os.getenv("ETHERSCAN_API_KEY")
 BASESCAN_API_KEY = os.getenv("BASESCAN_API_KEY")
 
-# Global Error Handler
+# Global error handler
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     logger.error(f"Error: {exc}")
     return JSONResponse(
         status_code=500,
-        content={"error": "Ein unerwarteter Fehler ist aufgetreten."}
+        content={"error": "An unexpected error occurred."}
     )
 
+# Get current crypto price from CoinGecko
 @app.get("/get_price")
 def get_price(coin: str, currency: str):
     try:
@@ -47,23 +48,24 @@ def get_price(coin: str, currency: str):
         response.raise_for_status()
         data = response.json()
         if coin not in data:
-            raise HTTPException(status_code=404, detail="Coin nicht gefunden.")
+            raise HTTPException(status_code=404, detail="Coin not found.")
         return data
     except Exception as e:
-        logger.error(f"Preisabfrage Fehler: {e}")
-        raise HTTPException(status_code=500, detail="Fehler bei Preisabfrage")
+        logger.error(f"Price fetch error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch price")
 
+# Get news articles for a cryptocurrency using NewsAPI
 @app.get("/get_news")
 def get_news(coin: str):
     try:
         if not NEWS_API_KEY:
-            raise HTTPException(status_code=500, detail="NEWS_API_KEY fehlt.")
+            raise HTTPException(status_code=500, detail="NEWS_API_KEY missing.")
         url = f"https://newsapi.org/v2/everything?q={coin}&sortBy=publishedAt&language=en&pageSize=5&apiKey={NEWS_API_KEY}"
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         articles = response.json().get("articles", [])
         if not articles:
-            return {"message": "Keine aktuellen News gefunden."}
+            return {"message": "No news found."}
         return [
             {
                 "title": a["title"],
@@ -74,9 +76,10 @@ def get_news(coin: str):
             for a in articles
         ]
     except Exception as e:
-        logger.error(f"News Fehler: {e}")
-        raise HTTPException(status_code=500, detail="Fehler bei Newsabfrage")
+        logger.error(f"News fetch error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch news")
 
+# Get Ethereum wallet balance using Etherscan API
 @app.get("/wallet_info")
 def wallet_info(address: str):
     try:
@@ -86,9 +89,10 @@ def wallet_info(address: str):
         balance = int(data["result"]) / 1e18
         return {"address": address, "eth_balance": balance}
     except Exception as e:
-        logger.error(f"ETH Wallet Fehler: {e}")
-        raise HTTPException(status_code=500, detail="Fehler bei ETH Wallet")
+        logger.error(f"ETH Wallet error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch ETH wallet info")
 
+# Get Base wallet balance using BaseScan API
 @app.get("/wallet_info_base")
 def wallet_info_base(address: str):
     try:
@@ -98,9 +102,10 @@ def wallet_info_base(address: str):
         balance = int(data["result"]) / 1e18
         return {"address": address, "base_balance": balance}
     except Exception as e:
-        logger.error(f"Base Wallet Fehler: {e}")
-        raise HTTPException(status_code=500, detail="Fehler bei Base Wallet")
+        logger.error(f"Base Wallet error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch Base wallet info")
 
+# Get Solana wallet balance using Solscan public API
 @app.get("/wallet_info_solana")
 def wallet_info_solana(address: str):
     try:
@@ -111,9 +116,10 @@ def wallet_info_solana(address: str):
         sol_balance = data.get("lamports", 0) / 1e9
         return {"address": address, "sol_balance": sol_balance}
     except Exception as e:
-        logger.error(f"Solana Wallet Fehler: {e}")
-        raise HTTPException(status_code=500, detail="Fehler bei Solana Wallet")
+        logger.error(f"Solana Wallet error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch Solana wallet info")
 
+# Get Bitcoin wallet balance using Blockstream API
 @app.get("/wallet_info_btc")
 def wallet_info_btc(address: str):
     try:
@@ -123,9 +129,10 @@ def wallet_info_btc(address: str):
         balance = data.get("chain_stats", {}).get("funded_txo_sum", 0) / 1e8
         return {"address": address, "btc_balance": balance}
     except Exception as e:
-        logger.error(f"Bitcoin Wallet Fehler: {e}")
-        raise HTTPException(status_code=500, detail="Fehler bei Bitcoin Wallet")
+        logger.error(f"Bitcoin Wallet error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch BTC wallet info")
 
+# Get XRP wallet balance using Ripple public API
 @app.get("/wallet_info_xrp")
 def wallet_info_xrp(address: str):
     try:
@@ -135,9 +142,10 @@ def wallet_info_xrp(address: str):
         xrp_balance = next((b["value"] for b in balances if b["currency"] == "XRP"), "0")
         return {"address": address, "xrp_balance": float(xrp_balance)}
     except Exception as e:
-        logger.error(f"XRP Wallet Fehler: {e}")
-        raise HTTPException(status_code=500, detail="Fehler bei XRP Wallet")
+        logger.error(f"XRP Wallet error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch XRP wallet info")
 
+# Get smart contract info (verification status, compiler version) from Etherscan
 @app.get("/contract_info")
 def contract_info(address: str):
     try:
@@ -146,17 +154,18 @@ def contract_info(address: str):
         response.raise_for_status()
         data = response.json().get("result", [])[0]
         if not data or not data["SourceCode"]:
-            return {"verified": False, "message": "Contract ist nicht verifiziert"}
+            return {"verified": False, "message": "Contract is not verified"}
         return {
             "verified": True,
             "contractName": data["ContractName"],
             "compilerVersion": data["CompilerVersion"],
-            "sourceCode": data["SourceCode"][:300] + "..."
+            "sourceCode": data["SourceCode"][:300] + "...",
         }
     except Exception as e:
-        logger.error(f"Contract Info Fehler: {e}")
-        raise HTTPException(status_code=500, detail="Fehler bei Contract Info")
+        logger.error(f"Contract info error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch contract info")
 
+# Get historical price chart for a coin from CoinGecko
 @app.get("/historical_price")
 def historical_price(coin: str, currency: str = "eur", days: int = 7):
     try:
@@ -167,5 +176,5 @@ def historical_price(coin: str, currency: str = "eur", days: int = 7):
         prices = [{"timestamp": ts, "price": price} for ts, price in data.get("prices", [])]
         return {"coin": coin, "currency": currency, "days": days, "prices": prices}
     except Exception as e:
-        logger.error(f"Kursverlauf Fehler: {e}")
-        raise HTTPException(status_code=500, detail="Fehler bei Kursverlauf-Abfrage")
+        logger.error(f"Historical price error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch historical price")
