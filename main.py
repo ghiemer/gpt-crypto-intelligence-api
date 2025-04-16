@@ -58,17 +58,40 @@ async def general_exception_handler(request: Request, exc: Exception):
     logger.error(f"Error: {exc}")
     return JSONResponse(status_code=500, content={"error": "An unexpected error occurred."})
 
-# CoinGecko price fetch
+# Slug-Fallback on price fetch
+def find_coin_slug(name: str):
+    try:
+        url = f"https://api.coingecko.com/api/v3/search?query={name}"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        coins = response.json().get("coins", [])
+        if not coins:
+            return None
+        return coins[0]["id"]  
+    except Exception as e:
+        logger.error(f"Slug search error for '{name}': {e}")
+        return None
+
+# CoinGecko price fetch on Slug-Fallback
 @app.get("/get_price")
 def get_price(coin: str, currency: str, _: str = Depends(verify_api_key)):
     try:
         url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin}&vs_currencies={currency}"
         response = requests.get(url, timeout=10)
+        if response.status_code == 404 or coin not in response.json():
+            logger.warning(f"Direct coin slug '{coin}' failed. Trying fallback...")
+            fallback_slug = find_coin_slug(coin)
+            if not fallback_slug:
+                raise HTTPException(status_code=404, detail="Coin not found.")
+            url = f"https://api.coingecko.com/api/v3/simple/price?ids={fallback_slug}&vs_currencies={currency}"
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            if fallback_slug not in data:
+                raise HTTPException(status_code=404, detail="Coin not found after fallback.")
+            return {fallback_slug: data[fallback_slug]}
         response.raise_for_status()
-        data = response.json()
-        if coin not in data:
-            raise HTTPException(status_code=404, detail="Coin not found.")
-        return data
+        return response.json()
     except Exception as e:
         logger.error(f"Price fetch error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch price")
