@@ -1,15 +1,11 @@
 services:
   - type: web
-    name: gpt-crypto-intelligence-api
-    env: python
+    name: gpt-crypto-api
+    env: docker
     plan: free
-    buildCommand: ""
-    startCommand: uvicorn main:app --host 0.0.0.0 --port 8000
+    region: oregon
+    dockerfilePath: ./Dockerfile
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11
-      - key: PORT
-        value: 8000
       - key: NEWS_API_KEY
         sync: false
       - key: ETHERSCAN_API_KEY
@@ -18,3 +14,9 @@ services:
         sync: false
       - key: BSCSCAN_API_KEY
         sync: false
+      - key: SOLANA_RPC_URL
+        value: https://api.mainnet-beta.solana.com
+      - key: XRP_RPC_URL
+        value: https://s1.ripple.com:51234
+      - key: LOG_LEVEL
+        value: INFO
