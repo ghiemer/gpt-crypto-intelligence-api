@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 import requests
 import logging
 import os
+import re
 from dotenv import load_dotenv
 
 from solana.rpc.api import Client as SolanaClient
@@ -46,6 +47,10 @@ SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com"
 def verify_api_key(x_api_key: str = Header(...)):
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
+
+# Ethereum address format validation
+def is_valid_eth_address(address: str) -> bool:
+    return bool(re.match(r"^0x[a-fA-F0-9]{40}$", address))
 
 # Global error handler
 @app.exception_handler(Exception)
@@ -94,6 +99,8 @@ def get_news(coin: str, _: str = Depends(verify_api_key)):
 @app.get("/wallet_info")
 def wallet_info(address: str, _: str = Depends(verify_api_key)):
     try:
+        if not is_valid_eth_address(address):
+            raise HTTPException(status_code=400, detail="Invalid Ethereum address")
         url = f"https://api.etherscan.io/api?module=account&action=balance&address={address}&tag=latest&apikey={ETHERSCAN_API_KEY}"
         res = requests.get(url, timeout=10)
         data = res.json()
@@ -107,6 +114,8 @@ def wallet_info(address: str, _: str = Depends(verify_api_key)):
 @app.get("/wallet_info_base")
 def wallet_info_base(address: str, _: str = Depends(verify_api_key)):
     try:
+        if not is_valid_eth_address(address):
+            raise HTTPException(status_code=400, detail="Invalid Base wallet address")
         url = f"https://api.basescan.org/api?module=account&action=balance&address={address}&tag=latest&apikey={BASESCAN_API_KEY}"
         res = requests.get(url, timeout=10)
         data = res.json()
@@ -120,6 +129,8 @@ def wallet_info_base(address: str, _: str = Depends(verify_api_key)):
 @app.get("/wallet_info_bsc")
 def wallet_info_bsc(address: str, _: str = Depends(verify_api_key)):
     try:
+        if not is_valid_eth_address(address):
+            raise HTTPException(status_code=400, detail="Invalid BSC wallet address")
         url = f"https://api.bscscan.com/api?module=account&action=balance&address={address}&tag=latest&apikey={BSCSCAN_API_KEY}"
         res = requests.get(url, timeout=10)
         data = res.json()
@@ -172,6 +183,8 @@ def wallet_info_xrp(address: str, _: str = Depends(verify_api_key)):
 @app.get("/contract_info")
 def contract_info(address: str, _: str = Depends(verify_api_key)):
     try:
+        if not is_valid_eth_address(address):
+            raise HTTPException(status_code=400, detail="Invalid contract address")
         url = f"https://api.etherscan.io/api?module=contract&action=getsourcecode&address={address}&apikey={ETHERSCAN_API_KEY}"
         response = requests.get(url, timeout=10)
         response.raise_for_status()
