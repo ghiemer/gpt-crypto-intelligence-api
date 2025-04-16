@@ -7,8 +7,9 @@ import os
 from dotenv import load_dotenv
 
 from solana.rpc.api import Client as SolanaClient
-from xrpl.clients import JsonRpcClient as XRPClient
-from xrpl.models.requests import AccountInfo
+from solders.pubkey import Pubkey
+
+from xrpl.clients import JsonRpcClient
 
 # Load environment variables from .env file
 load_dotenv()
@@ -35,7 +36,7 @@ ETHERSCAN_API_KEY = os.getenv("ETHERSCAN_API_KEY")
 BASESCAN_API_KEY = os.getenv("BASESCAN_API_KEY")
 BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY")
 
-# XRP & Solana Clients (öffentlich, ohne Auth)
+# Public RPC endpoints
 XRP_RPC_URL = "https://s1.ripple.com:51234"
 SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com"
 
@@ -48,7 +49,6 @@ async def general_exception_handler(request: Request, exc: Exception):
         content={"error": "An unexpected error occurred."}
     )
 
-# Get current crypto price from CoinGecko
 @app.get("/get_price")
 def get_price(coin: str, currency: str):
     try:
@@ -63,7 +63,6 @@ def get_price(coin: str, currency: str):
         logger.error(f"Price fetch error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch price")
 
-# Get news articles for a cryptocurrency using NewsAPI
 @app.get("/get_news")
 def get_news(coin: str):
     try:
@@ -81,14 +80,12 @@ def get_news(coin: str):
                 "url": a["url"],
                 "source": a["source"]["name"],
                 "publishedAt": a["publishedAt"]
-            }
-            for a in articles
+            } for a in articles
         ]
     except Exception as e:
         logger.error(f"News fetch error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch news")
 
-# Get Ethereum wallet balance using Etherscan API
 @app.get("/wallet_info")
 def wallet_info(address: str):
     try:
@@ -101,7 +98,6 @@ def wallet_info(address: str):
         logger.error(f"ETH Wallet error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch ETH wallet info")
 
-# Get Base wallet balance using BaseScan API
 @app.get("/wallet_info_base")
 def wallet_info_base(address: str):
     try:
@@ -114,7 +110,6 @@ def wallet_info_base(address: str):
         logger.error(f"Base Wallet error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch Base wallet info")
 
-# Get BSC wallet balance using BscScan API
 @app.get("/wallet_info_bsc")
 def wallet_info_bsc(address: str):
     try:
@@ -127,35 +122,19 @@ def wallet_info_bsc(address: str):
         logger.error(f"BSC Wallet error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch BSC wallet info")
 
-# Get Solana wallet balance using Solscan public API
-# @app.get("/wallet_info_solana")
-# def wallet_info_solana(address: str):
-#     try:
-#         url = f"https://public-api.solscan.io/account/{address}"
-#         # headers = {"accept": "application/json"}
-#         headers = {"accept": "application/json", "User-Agent": "Mozilla/5.0"}
-
-#         res = requests.get(url, headers=headers, timeout=10)
-#         data = res.json()
-#         sol_balance = data.get("lamports", 0) / 1e9
-#         return {"address": address, "sol_balance": sol_balance}
-#     except Exception as e:
-#         logger.error(f"Solana Wallet error: {e}")
-#         raise HTTPException(status_code=500, detail="Failed to fetch Solana wallet info")
-
 @app.get("/wallet_info_solana")
 def wallet_info_solana(address: str):
     try:
         client = SolanaClient(SOLANA_RPC_URL)
-        response = client.get_balance(address)
-        sol_balance = response["result"]["value"] / 1e9
+        pubkey = Pubkey.from_string(address)
+        response = client.get_balance(pubkey)
+        print("SOLANA RAW RESPONSE:", response)
+        sol_balance = response.value / 1e9
         return {"address": address, "sol_balance": sol_balance}
     except Exception as e:
         logger.error(f"Solana Wallet error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch Solana wallet info")
 
-
-# Get Bitcoin wallet balance using Blockstream API
 @app.get("/wallet_info_btc")
 def wallet_info_btc(address: str):
     try:
@@ -168,38 +147,19 @@ def wallet_info_btc(address: str):
         logger.error(f"Bitcoin Wallet error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch BTC wallet info")
 
-# Get XRP wallet balance using Ripple public API
-# @app.get("/wallet_info_xrp")
-# def wallet_info_xrp(address: str):
-#     try:
-#         url = f"https://data.ripple.com/v2/accounts/{address}/balances"
-#         headers = {
-#             "accept": "application/json",
-#             "User-Agent": "Mozilla/5.0"
-#         }
-#         res = requests.get(url, headers=headers, timeout=10)
-#         res.raise_for_status()
-#         balances = res.json().get("balances", [])
-#         xrp_balance = next((b["value"] for b in balances if b["currency"] == "XRP"), "0")
-#         return {"address": address, "xrp_balance": float(xrp_balance)}
-#     except Exception as e:
-#         logger.error(f"XRP Wallet error: {e}")
-#         raise HTTPException(status_code=500, detail="Failed to fetch XRP wallet info")
-
 @app.get("/wallet_info_xrp")
 def wallet_info_xrp(address: str):
     try:
-        client = XRPClient(XRP_RPC_URL)
-        request = AccountInfo(account=address, ledger_index="validated", queue=True)
-        response = client.request(request)
+        client = JsonRpcClient(XRP_RPC_URL)
+        from xrpl.models.requests import AccountInfo
+        req = AccountInfo(account=address, ledger_index="validated")
+        response = client.request(req)
         balance = int(response.result["account_data"]["Balance"]) / 1_000_000
         return {"address": address, "xrp_balance": balance}
     except Exception as e:
         logger.error(f"XRP Wallet error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch XRP wallet info")
-
-
-# Get smart contract info (verification status, compiler version) from Etherscan
+    
 @app.get("/contract_info")
 def contract_info(address: str):
     try:
@@ -219,7 +179,6 @@ def contract_info(address: str):
         logger.error(f"Contract info error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch contract info")
 
-# Get historical price chart for a coin from CoinGecko
 @app.get("/historical_price")
 def historical_price(coin: str, currency: str = "eur", days: int = 7):
     try:
