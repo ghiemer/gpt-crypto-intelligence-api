@@ -6,6 +6,10 @@ import logging
 import os
 from dotenv import load_dotenv
 
+from solana.rpc.api import Client as SolanaClient
+from xrpl.clients import JsonRpcClient as XRPClient
+from xrpl.models.requests import AccountInfo
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -30,6 +34,10 @@ NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 ETHERSCAN_API_KEY = os.getenv("ETHERSCAN_API_KEY")
 BASESCAN_API_KEY = os.getenv("BASESCAN_API_KEY")
 BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY")
+
+# XRP & Solana Clients (öffentlich, ohne Auth)
+XRP_RPC_URL = "https://s1.ripple.com:51234"
+SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com"
 
 # Global error handler
 @app.exception_handler(Exception)
@@ -120,20 +128,32 @@ def wallet_info_bsc(address: str):
         raise HTTPException(status_code=500, detail="Failed to fetch BSC wallet info")
 
 # Get Solana wallet balance using Solscan public API
+# @app.get("/wallet_info_solana")
+# def wallet_info_solana(address: str):
+#     try:
+#         url = f"https://public-api.solscan.io/account/{address}"
+#         # headers = {"accept": "application/json"}
+#         headers = {"accept": "application/json", "User-Agent": "Mozilla/5.0"}
+
+#         res = requests.get(url, headers=headers, timeout=10)
+#         data = res.json()
+#         sol_balance = data.get("lamports", 0) / 1e9
+#         return {"address": address, "sol_balance": sol_balance}
+#     except Exception as e:
+#         logger.error(f"Solana Wallet error: {e}")
+#         raise HTTPException(status_code=500, detail="Failed to fetch Solana wallet info")
+
 @app.get("/wallet_info_solana")
 def wallet_info_solana(address: str):
     try:
-        url = f"https://public-api.solscan.io/account/{address}"
-        # headers = {"accept": "application/json"}
-        headers = {"accept": "application/json", "User-Agent": "Mozilla/5.0"}
-
-        res = requests.get(url, headers=headers, timeout=10)
-        data = res.json()
-        sol_balance = data.get("lamports", 0) / 1e9
+        client = SolanaClient(SOLANA_RPC_URL)
+        response = client.get_balance(address)
+        sol_balance = response["result"]["value"] / 1e9
         return {"address": address, "sol_balance": sol_balance}
     except Exception as e:
         logger.error(f"Solana Wallet error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch Solana wallet info")
+
 
 # Get Bitcoin wallet balance using Blockstream API
 @app.get("/wallet_info_btc")
@@ -149,22 +169,35 @@ def wallet_info_btc(address: str):
         raise HTTPException(status_code=500, detail="Failed to fetch BTC wallet info")
 
 # Get XRP wallet balance using Ripple public API
+# @app.get("/wallet_info_xrp")
+# def wallet_info_xrp(address: str):
+#     try:
+#         url = f"https://data.ripple.com/v2/accounts/{address}/balances"
+#         headers = {
+#             "accept": "application/json",
+#             "User-Agent": "Mozilla/5.0"
+#         }
+#         res = requests.get(url, headers=headers, timeout=10)
+#         res.raise_for_status()
+#         balances = res.json().get("balances", [])
+#         xrp_balance = next((b["value"] for b in balances if b["currency"] == "XRP"), "0")
+#         return {"address": address, "xrp_balance": float(xrp_balance)}
+#     except Exception as e:
+#         logger.error(f"XRP Wallet error: {e}")
+#         raise HTTPException(status_code=500, detail="Failed to fetch XRP wallet info")
+
 @app.get("/wallet_info_xrp")
 def wallet_info_xrp(address: str):
     try:
-        url = f"https://data.ripple.com/v2/accounts/{address}/balances"
-        headers = {
-            "accept": "application/json",
-            "User-Agent": "Mozilla/5.0"
-        }
-        res = requests.get(url, headers=headers, timeout=10)
-        res.raise_for_status()
-        balances = res.json().get("balances", [])
-        xrp_balance = next((b["value"] for b in balances if b["currency"] == "XRP"), "0")
-        return {"address": address, "xrp_balance": float(xrp_balance)}
+        client = XRPClient(XRP_RPC_URL)
+        request = AccountInfo(account=address, ledger_index="validated", queue=True)
+        response = client.request(request)
+        balance = int(response.result["account_data"]["Balance"]) / 1_000_000
+        return {"address": address, "xrp_balance": balance}
     except Exception as e:
         logger.error(f"XRP Wallet error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch XRP wallet info")
+
 
 # Get smart contract info (verification status, compiler version) from Etherscan
 @app.get("/contract_info")
