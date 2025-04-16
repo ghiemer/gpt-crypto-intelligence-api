@@ -29,6 +29,7 @@ app.add_middleware(
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 ETHERSCAN_API_KEY = os.getenv("ETHERSCAN_API_KEY")
 BASESCAN_API_KEY = os.getenv("BASESCAN_API_KEY")
+BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY")
 
 # Global error handler
 @app.exception_handler(Exception)
@@ -104,6 +105,19 @@ def wallet_info_base(address: str):
     except Exception as e:
         logger.error(f"Base Wallet error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch Base wallet info")
+
+# Get BSC wallet balance using BscScan API
+@app.get("/wallet_info_bsc")
+def wallet_info_bsc(address: str):
+    try:
+        url = f"https://api.bscscan.com/api?module=account&action=balance&address={address}&tag=latest&apikey={BSCSCAN_API_KEY}"
+        res = requests.get(url, timeout=10)
+        data = res.json()
+        balance = int(data["result"]) / 1e18
+        return {"address": address, "bsc_balance": balance}
+    except Exception as e:
+        logger.error(f"BSC Wallet error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch BSC wallet info")
 
 # Get Solana wallet balance using Solscan public API
 @app.get("/wallet_info_solana")
